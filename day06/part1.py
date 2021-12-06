@@ -2,12 +2,12 @@
 
 import argparse
 import fileinput
-import functools
 import sys
 
 global_debug = False
 
-def fish_count(state):
+def fish_count():
+    state = [6]
     day = 0
     day_label = 'day: '
     while True:
@@ -26,14 +26,6 @@ def fish_count(state):
 
         yield len(state)
 
-@functools.lru_cache
-def one_fish(state, days):
-    count_generator = fish_count([state])
-    for _ in range(days):
-        count = next(count_generator)
-
-    return count
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--days', type=int, default=18)
@@ -49,5 +41,9 @@ if __name__ == '__main__':
     if global_debug:
         sys.stderr.write('Initial state: {}\n'.format(','.join(map(str, initial_state))))
 
-    total = sum([one_fish(n, args.days) for n in initial_state])
+    counter = fish_count()
+    for _ in range(1, args.days):
+        next(counter)
+    counts = [next(counter) for i in range(7)]
+    total = sum([counts[6-n] for n in initial_state])
     print(total)
