@@ -7,10 +7,11 @@ import sys
 global_debug = False
 
 def fish_count(state):
+    day_index = 0
     while True:
-        new_fish = state[0]
-        state = state[1:] + [new_fish]
-        state[6] += new_fish
+        new_fish = state[day_index]
+        day_index = (day_index + 1) % 9
+        state[(day_index+6)%9] += new_fish
 
         yield sum(state)
 
