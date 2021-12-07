@@ -8,10 +8,16 @@ global_debug = False
 
 def fish_count(state):
     day_index = 0
+    day = 0
     while True:
         new_fish = state[day_index]
         day_index = (day_index + 1) % 9
         state[(day_index+6)%9] += new_fish
+
+        if global_debug:
+            day += 1
+            debug_state = state[day_index:] + state[:day_index]
+            sys.stderr.write('{:3d} {}\n'.format(day, ','.join(map(str, debug_state))))
 
         yield sum(state)
 
