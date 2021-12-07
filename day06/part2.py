@@ -6,8 +6,7 @@ import sys
 
 global_debug = False
 
-def fish_count():
-    state = [0, 0, 0, 0, 0, 0, 1, 0, 0]
+def fish_count(state):
     while True:
         new_fish = state[0]
         state = state[1:] + [new_fish]
@@ -25,14 +24,14 @@ if __name__ == '__main__':
     global_debug = args.debug
 
     line = next(fileinput.input(args.file))
-    initial_state = [int(n) for n in line.split(',')]
+    initial_state = [0] * 9
+    for n in line.split(','):
+        initial_state[int(n)] += 1
 
     if global_debug:
         sys.stderr.write('Initial state: {}\n'.format(','.join(map(str, initial_state))))
 
-    counter = fish_count()
-    for _ in range(1, args.days):
-        next(counter)
-    counts = [next(counter) for i in range(7)]
-    total = sum([counts[6-n] for n in initial_state])
+    counter = fish_count(initial_state)
+    for _ in range(args.days):
+        total = next(counter)
     print(total)
