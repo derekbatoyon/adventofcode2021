@@ -2,33 +2,43 @@
 
 import argparse
 import fileinput
+import math
 
-def adjacents(heightmap, row, col):
-    above = row-1
-    if above >= 0:
-        yield heightmap[above][col]
+class Heightmap:
+    def __init__(self, input):
+        self.heightmap = [[int(n) for n in line.strip()] for line in input]
+        self.rows = len(self.heightmap)
+        self.cols = len(self.heightmap[0])
+        assert all(map(lambda row: len(row) == self.cols, self.heightmap[1:]))
 
-    left = col - 1
-    if left >= 0:
-        yield heightmap[row][left]
+    def adjacents(self, row, col):
+        above = row - 1
+        if above >= 0:
+            yield (above, col)
 
-    try:
-        yield heightmap[row+1][col]
-    except IndexError:
-        pass
+        left = col - 1
+        if left >= 0:
+            yield (row, left)
 
-    try:
-        yield heightmap[row][col+1]
-    except IndexError:
-        pass
+        below = row + 1
+        if below < self.rows:
+            yield (below, col)
 
-def low_points(heightmap):
-    for row in range(len(heightmap)):
-        for col in range(len(heightmap[row])):
-            height = heightmap[row][col]
-            adjacent_height = list(adjacents(heightmap, row, col))
-            if all(map(lambda h: h > height, adjacent_height)):
-                yield height
+        right = col + 1
+        if right < self.cols:
+            yield (row, right)
+
+    def point_height(self, point):
+        row, col = point
+        return self.heightmap[row][col]
+
+    def low_points(self):
+        for row in range(self.rows):
+            for col in range(self.cols):
+                height = self.heightmap[row][col]
+                adjacents = self.adjacents(row, col)
+                if all(map(lambda h: h > height, [self.point_height(point) for point in adjacents])):
+                    yield (row, col)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -36,5 +46,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     input = fileinput.FileInput(files=args.files)
-    heightmap = [[int(n) for n in line.strip()] for line in input]
-    print(sum(map(lambda h: h + 1, low_points(heightmap))))
+    heightmap = Heightmap(input)
+
+    print(sum(map(lambda p: heightmap.point_height(p) + 1, heightmap.low_points())))
