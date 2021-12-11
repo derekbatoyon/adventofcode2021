@@ -1,41 +1,47 @@
 #!/usr/local/bin/python3
 
 import fileinput
-import math
-import operator
 import sys
 
-def evaluate_rating(numbers, select_one_op):
-    max_value = max(numbers)
-    bit_count = int((math.log(max_value, 2)))
+class Node:
+    def __init__(self, value=''):
+        self.value = value
+        self.weight = 0
+        self.children = {}
 
-    candidates = len(numbers)
-    rating = 0
+    def add(self, str):
+        if len(str):
+            self.weight += 1
+            c = str[0]
+            assert c in ['0', '1'], 'What should I do with "{}"?\n'.format(c)
+            if not c in self.children:
+                self.children[c] = Node(c)
+            self.children[c].add(str[1:])
 
-    for bit_position in range(bit_count, -1, -1):
-        threshold = rating | 2 ** bit_position
-        zero_count = sum(map(lambda n: rating <= n and n < threshold, numbers))
-        one_count = candidates - zero_count
+    def search(self, reverse):
+        if len(self.children) == 0:
+            return self.value
 
-        if one_count == 0:
-            # keep values with a 0 in the position
-            candidates = zero_count
-        elif zero_count == 0 or select_one_op(zero_count, one_count):
-            # keep values with a 1 in the position
-            rating = threshold
-            candidates = one_count
-        else:
-            # keep values with a 0 in the position
-            candidates = zero_count
+        children = list(self.children.values())
+        children.sort(key=lambda node: node.value, reverse=reverse)
+        children.sort(key=lambda node: node.weight, reverse=reverse)
+        return self.value + children[0].search(reverse)
 
-    assert candidates == 1
-    return rating
+class Tree:
+    def __init__(self, input):
+        self.tree = Node()
+        for line in input:
+            self.tree.add(line.strip())
+
+    def evaluate_rating(self, reverse):
+        rating_str = self.tree.search(reverse)
+        return int(rating_str, base=2)
 
 if __name__ == '__main__':
-    numbers = [int(line, base=2) for line in fileinput.input()]
+    tree = Tree(fileinput.FileInput())
 
-    generator_rating = evaluate_rating(numbers, operator.gt)
-    scrubber_rating = evaluate_rating(numbers, operator.le)
+    generator_rating = tree.evaluate_rating(False)
+    scrubber_rating = tree.evaluate_rating(True)
 
     sys.stderr.write('oxygen generator rating: {0:012b} => {0}\n'.format(generator_rating))
     sys.stderr.write('CO2 scrubber rating:     {0:012b} => {0}\n'.format(scrubber_rating))
