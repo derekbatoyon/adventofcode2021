@@ -5,13 +5,6 @@ import fileinput
 import re
 import sys
 
-def build_dot_list(dot_generator):
-    new_dots = []
-    for dot in dot_generator:
-        if dot not in new_dots:
-            new_dots.append(dot)
-    return new_dots
-
 def fold_along_x(dots, pivot):
     def fold_x():
         for x, y in dots:
@@ -20,7 +13,7 @@ def fold_along_x(dots, pivot):
             else:
                 yield (x, y)
 
-    return build_dot_list(fold_x())
+    return set(fold_x())
 
 def fold_along_y(dots, pivot):
     def fold_y():
@@ -29,7 +22,7 @@ def fold_along_y(dots, pivot):
                 yield (x, 2*pivot-y)
             else:
                 yield (x, y)
-    return build_dot_list(fold_y())
+    return set(fold_y())
 
 def print_dots(dots):
     max_x = max([x for x, _ in dots])
