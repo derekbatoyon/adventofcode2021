@@ -9,10 +9,8 @@ import operator
 import sys
 import time
 
-size_factor = 5
-
 class Cave:
-    def __init__(self, input):
+    def __init__(self, input, size_factor=1):
         def rows():
             for line in input:
                 row = [int(c) for c in line.strip()]
@@ -22,6 +20,8 @@ class Cave:
         self.cols = len(self.risk_level[0])
         for row in self.risk_level[1:]:
             assert self.cols == len(row)
+        self.size_factor = size_factor
+        self.risk_adjustment = list(range(10)) + list(range(1, 10)) * (size_factor * 2 - 2)
         self.goal = (size_factor*self.rows-1, size_factor*self.cols-1)
         self.window = None
 
@@ -34,8 +34,8 @@ class Cave:
         if self.window:
             self.window.clear()
 
-            for x in range(size_factor*self.rows):
-                for y in range(size_factor*self.cols):
+            for x in range(self.size_factor*self.rows):
+                for y in range(self.size_factor*self.cols):
                     position = (x, y)
                     self.window.addch(x, y, self.calculate_risk_ch(position), self.attr[position in path])
 
@@ -45,18 +45,17 @@ class Cave:
     def adjacents(self, position):
         x, y = position
         below = x + 1
-        if below < size_factor*self.rows:
+        if below < self.size_factor*self.rows:
             yield (below, y)
         right = y + 1
-        if right < size_factor*self.cols:
+        if right < self.size_factor*self.cols:
             yield (x, right)
 
-    risk_adjustment = list(range(10)) + list(range(1, 10)) * (size_factor * 2 - 2)
     def calculate_risk(self, position):
         x, y = position
         risk = self.risk_level[x % self.rows][y % self.cols]
         risk += int(x / self.rows) + int(y / self.cols)
-        return Cave.risk_adjustment[risk]
+        return self.risk_adjustment[risk]
 
     def calculate_risk_ch(self, position):
         return self.calculate_risk(position) + ord('0')
@@ -91,7 +90,7 @@ def main(stdscr, args):
 
     input = fileinput.FileInput(files=args.files)
 
-    cave = Cave(input)
+    cave = Cave(input, args.size)
     cave.set_window(stdscr)
     min_risk, min_path = cave.lowest_risk()
     cave.draw(min_path)
@@ -106,6 +105,7 @@ def main(stdscr, args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('files', nargs='*')
+    parser.add_argument('--size', type=int, default=5)
     parser.add_argument('--show-path', action='store_true')
     args = parser.parse_args()
 
