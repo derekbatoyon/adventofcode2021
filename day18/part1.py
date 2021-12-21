@@ -9,6 +9,7 @@ import re
 import sys
 
 number_pattern = re.compile(r'\b\d+\b')
+double_digit_pattern = re.compile(r'\d\d+')
 
 def add(a, b, auto_reduce=True):
     snailfish = '[{},{}]'.format(a,b)
@@ -59,11 +60,12 @@ def explode(snailfish):
     return (snailfish, False)
 
 def split(snailfish):
-    for match in number_pattern.finditer(snailfish):
+    def _split(match):
         value = int(match.group())
-        if value > 9:
-            return ('{}[{},{}]{}'.format(snailfish[:match.start()], math.floor(value/2), math.ceil(value/2), snailfish[match.end():]), True)
-    return (snailfish, False)
+        return '[{},{}]'.format(math.floor(value/2), math.ceil(value/2))
+
+    snailfish, subs = double_digit_pattern.subn(_split, snailfish, count=1)
+    return (snailfish, subs>0)
 
 def magnitude(snailfish):
     def _magnitude(list_):
